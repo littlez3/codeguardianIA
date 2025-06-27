@@ -1,0 +1,217 @@
+{
+  "test_suite_info": {
+    "name": "CodeGuardian AI v3.0.0 Simplified Test Suite",
+    "version": "3.0.0",
+    "execution_date": "2025-06-25T12:18:15.960510",
+    "total_execution_time": 6.97786021232605,
+    "total_tests": 8,
+    "successful_tests": 7,
+    "failed_tests": 1,
+    "overall_success_rate": 0.875
+  },
+  "category_results": {
+    "Core Functionality Tests": {
+      "tests": [
+        "TestResult(test_name='security_analysis_simulation', success=True, execution_time=4.291534423828125e-06, details={'vulnerabilities_found': 3, 'risk_score': 75, 'analysis_time': 4.291534423828125e-06}, error_message=None)",
+        "TestResult(test_name='architecture_analysis_simulation', success=True, execution_time=1.71661376953125e-05, details={'patterns_detected': 3, 'complexity_score': 5, 'maintainability_score': 75, 'analysis_time': 1.71661376953125e-05}, error_message=None)",
+        "TestResult(test_name='performance_analysis_simulation', success=True, execution_time=2.384185791015625e-06, details={'issues_found': 2, 'suggestions_count': 3, 'analysis_time': 2.384185791015625e-06}, error_message=None)"
+      ],
+      "execution_time": 0.0002002716064453125,
+      "success_rate": 1.0
+    },
+    "Integration Tests": {
+      "tests": [
+        "TestResult(test_name='multi_agent_coordination_simulation', success=True, execution_time=1.0013580322265625e-05, details={'agents_executed': 6, 'overall_risk_score': 54.166666666666664, 'coordination_time': 1.0013580322265625e-05}, error_message=None)"
+      ],
+      "execution_time": 4.935264587402344e-05,
+      "success_rate": 1.0
+    },
+    "Performance Tests": {
+      "tests": [
+        "TestResult(test_name='latency_performance', success=True, execution_time=1.003298282623291, details={'p50_latency_ms': 50.162434577941895, 'p95_latency_ms': 50.19620656967163, 'p99_latency_ms': 50.19664764404297, 'avg_latency_ms': 50.1491904258728, 'test_iterations': 20, 'meets_requirements': True}, error_message=None)",
+        "TestResult(test_name='throughput_performance', success=False, execution_time=5.019593715667725, details={'throughput_rps': 19.921931069414775, 'success_rate': 1.0, 'total_requests': 100, 'successful_requests': 100, 'test_duration': 5.019593715667725, 'meets_requirements': False}, error_message=None)"
+      ],
+      "execution_time": 6.023207902908325,
+      "success_rate": 0.5
+    },
+    "Load Tests": {
+      "tests": [
+        "TestResult(test_name='concurrent_load', success=True, execution_time=0.15196752548217773, details={'concurrent_users': 10, 'total_requests': 50, 'successful_requests': 50, 'failed_requests': 0, 'success_rate': 1.0, 'avg_response_time': 0.030091195106506347, 'test_duration': 0.15196752548217773, 'meets_requirements': True}, error_message=None)"
+      ],
+      "execution_time": 0.15214323997497559,
+      "success_rate": 1.0
+    },
+    "End-to-End Tests": {
+      "tests": [
+        "TestResult(test_name='complete_workflow_simulation', success=True, execution_time=0.8017973899841309, details={'workflow_steps': 10, 'successful_steps': 10, 'total_workflow_time': 0.8000000000000002, 'overall_risk_score': 65, 'knowledge_updates': 2, 'learning_events': 2}, error_message=None)"
+      ],
+      "execution_time": 0.8020668029785156,
+      "success_rate": 1.0
+    }
+  },
+  "detailed_results": [
+    {
+      "test_name": "security_analysis_simulation",
+      "success": true,
+      "execution_time": 4.291534423828125e-06,
+      "details": {
+        "vulnerabilities_found": 3,
+        "risk_score": 75,
+        "analysis_time": 4.291534423828125e-06
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "architecture_analysis_simulation",
+      "success": true,
+      "execution_time": 1.71661376953125e-05,
+      "details": {
+        "patterns_detected": 3,
+        "complexity_score": 5,
+        "maintainability_score": 75,
+        "analysis_time": 1.71661376953125e-05
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "performance_analysis_simulation",
+      "success": true,
+      "execution_time": 2.384185791015625e-06,
+      "details": {
+        "issues_found": 2,
+        "suggestions_count": 3,
+        "analysis_time": 2.384185791015625e-06
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "multi_agent_coordination_simulation",
+      "success": true,
+      "execution_time": 1.0013580322265625e-05,
+      "details": {
+        "agents_executed": 6,
+        "overall_risk_score": 54.166666666666664,
+        "coordination_time": 1.0013580322265625e-05
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "latency_performance",
+      "success": true,
+      "execution_time": 1.003298282623291,
+      "details": {
+        "p50_latency_ms": 50.162434577941895,
+        "p95_latency_ms": 50.19620656967163,
+        "p99_latency_ms": 50.19664764404297,
+        "avg_latency_ms": 50.1491904258728,
+        "test_iterations": 20,
+        "meets_requirements": true
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "throughput_performance",
+      "success": false,
+      "execution_time": 5.019593715667725,
+      "details": {
+        "throughput_rps": 19.921931069414775,
+        "success_rate": 1.0,
+        "total_requests": 100,
+        "successful_requests": 100,
+        "test_duration": 5.019593715667725,
+        "meets_requirements": false
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "concurrent_load",
+      "success": true,
+      "execution_time": 0.15196752548217773,
+      "details": {
+        "concurrent_users": 10,
+        "total_requests": 50,
+        "successful_requests": 50,
+        "failed_requests": 0,
+        "success_rate": 1.0,
+        "avg_response_time": 0.030091195106506347,
+        "test_duration": 0.15196752548217773,
+        "meets_requirements": true
+      },
+      "error_message": null
+    },
+    {
+      "test_name": "complete_workflow_simulation",
+      "success": true,
+      "execution_time": 0.8017973899841309,
+      "details": {
+        "workflow_steps": 10,
+        "successful_steps": 10,
+        "total_workflow_time": 0.8000000000000002,
+        "overall_risk_score": 65,
+        "knowledge_updates": 2,
+        "learning_events": 2
+      },
+      "error_message": null
+    }
+  ],
+  "performance_summary": {
+    "performance_tests": [
+      {
+        "test_name": "performance_analysis_simulation",
+        "execution_time": 2.384185791015625e-06,
+        "success": true,
+        "details": {
+          "issues_found": 2,
+          "suggestions_count": 3,
+          "analysis_time": 2.384185791015625e-06
+        }
+      },
+      {
+        "test_name": "latency_performance",
+        "execution_time": 1.003298282623291,
+        "success": true,
+        "details": {
+          "p50_latency_ms": 50.162434577941895,
+          "p95_latency_ms": 50.19620656967163,
+          "p99_latency_ms": 50.19664764404297,
+          "avg_latency_ms": 50.1491904258728,
+          "test_iterations": 20,
+          "meets_requirements": true
+        }
+      },
+      {
+        "test_name": "throughput_performance",
+        "execution_time": 5.019593715667725,
+        "success": false,
+        "details": {
+          "throughput_rps": 19.921931069414775,
+          "success_rate": 1.0,
+          "total_requests": 100,
+          "successful_requests": 100,
+          "test_duration": 5.019593715667725,
+          "meets_requirements": false
+        }
+      },
+      {
+        "test_name": "concurrent_load",
+        "execution_time": 0.15196752548217773,
+        "success": true,
+        "details": {
+          "concurrent_users": 10,
+          "total_requests": 50,
+          "successful_requests": 50,
+          "failed_requests": 0,
+          "success_rate": 1.0,
+          "avg_response_time": 0.030091195106506347,
+          "test_duration": 0.15196752548217773,
+          "meets_requirements": true
+        }
+      }
+    ],
+    "performance_grade": "C+"
+  },
+  "recommendations": [
+    "Address 1 failed tests before production deployment",
+    "Optimize performance for 1 slow-running tests"
+  ]
+}

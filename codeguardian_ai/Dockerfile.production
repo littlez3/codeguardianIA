@@ -1,0 +1,263 @@
+# CodeGuardian AI v3.0.0 Enterprise - Production Dockerfile
+# Multi-stage build for optimized production deployment
+
+# Build stage
+FROM python:3.11-slim as builder
+
+# Set build arguments
+ARG BUILD_DATE
+ARG VERSION=3.0.0
+ARG VCS_REF
+
+# Add metadata
+LABEL maintainer="CodeGuardian AI Team" \
+      version="${VERSION}" \
+      description="CodeGuardian AI Enterprise - Advanced AI-powered code analysis platform" \
+      build-date="${BUILD_DATE}" \
+      vcs-ref="${VCS_REF}"
+
+# Set environment variables for build
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application user
+RUN groupadd -r codeguardian && useradd -r -g codeguardian codeguardian
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+COPY pyproject.toml .
+
+# Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt && \
+    pip install gunicorn[gevent] && \
+    pip install uvicorn[standard]
+
+# Production stage
+FROM python:3.11-slim as production
+
+# Set production environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app/src \
+    ENVIRONMENT=production \
+    LOG_LEVEL=info \
+    WORKERS=4 \
+    MAX_WORKERS=8 \
+    WORKER_CLASS=uvicorn.workers.UvicornWorker \
+    WORKER_CONNECTIONS=1000 \
+    MAX_REQUESTS=1000 \
+    MAX_REQUESTS_JITTER=100 \
+    TIMEOUT=30 \
+    KEEPALIVE=5 \
+    PRELOAD_APP=true
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create application user
+RUN groupadd -r codeguardian && useradd -r -g codeguardian codeguardian
+
+# Create necessary directories
+RUN mkdir -p /app /app/logs /app/data /app/cache && \
+    chown -R codeguardian:codeguardian /app
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Set work directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=codeguardian:codeguardian . .
+
+# Create startup script
+RUN cat > /app/start.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Function to log with timestamp
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Health check function
+health_check() {
+    curl -f http://localhost:${PORT:-8000}/health || exit 1
+}
+
+# Graceful shutdown handler
+shutdown_handler() {
+    log "Received shutdown signal, gracefully stopping..."
+    kill -TERM "$child" 2>/dev/null
+    wait "$child"
+    log "Application stopped"
+    exit 0
+}
+
+# Set up signal handlers
+trap shutdown_handler SIGTERM SIGINT
+
+# Validate environment
+log "Starting CodeGuardian AI v3.0.0 Enterprise"
+log "Environment: ${ENVIRONMENT:-development}"
+log "Workers: ${WORKERS:-4}"
+log "Port: ${PORT:-8000}"
+
+# Check required environment variables
+if [ -z "$JWT_SECRET_KEY" ]; then
+    log "WARNING: JWT_SECRET_KEY not set, using default (not secure for production)"
+    export JWT_SECRET_KEY="your-secret-key-change-in-production"
+fi
+
+# Create necessary directories
+mkdir -p /app/logs /app/data /app/cache
+
+# Set permissions
+chown -R codeguardian:codeguardian /app/logs /app/data /app/cache
+
+# Start application
+log "Starting Gunicorn with Uvicorn workers..."
+
+exec gunicorn \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --workers ${WORKERS:-4} \
+    --worker-class ${WORKER_CLASS:-uvicorn.workers.UvicornWorker} \
+    --worker-connections ${WORKER_CONNECTIONS:-1000} \
+    --max-requests ${MAX_REQUESTS:-1000} \
+    --max-requests-jitter ${MAX_REQUESTS_JITTER:-100} \
+    --timeout ${TIMEOUT:-30} \
+    --keepalive ${KEEPALIVE:-5} \
+    --preload \
+    --access-logfile /app/logs/access.log \
+    --error-logfile /app/logs/error.log \
+    --log-level ${LOG_LEVEL:-info} \
+    --capture-output \
+    --enable-stdio-inheritance \
+    src.api.production_api:app &
+
+child=$!
+log "Application started with PID $child"
+
+# Wait for the application to start
+sleep 5
+
+# Continuous health monitoring
+while kill -0 "$child" 2>/dev/null; do
+    sleep 30
+    if ! health_check; then
+        log "Health check failed, application may be unhealthy"
+    fi
+done
+
+wait "$child"
+EOF
+
+# Make startup script executable
+RUN chmod +x /app/start.sh
+
+# Create health check script
+RUN cat > /app/healthcheck.sh << 'EOF'
+#!/bin/bash
+curl -f http://localhost:${PORT:-8000}/health || exit 1
+EOF
+
+RUN chmod +x /app/healthcheck.sh
+
+# Create configuration file
+RUN cat > /app/gunicorn.conf.py << 'EOF'
+import os
+import multiprocessing
+
+# Server socket
+bind = f"0.0.0.0:{os.getenv('PORT', '8000')}"
+backlog = 2048
+
+# Worker processes
+workers = int(os.getenv('WORKERS', multiprocessing.cpu_count() * 2 + 1))
+worker_class = os.getenv('WORKER_CLASS', 'uvicorn.workers.UvicornWorker')
+worker_connections = int(os.getenv('WORKER_CONNECTIONS', '1000'))
+max_requests = int(os.getenv('MAX_REQUESTS', '1000'))
+max_requests_jitter = int(os.getenv('MAX_REQUESTS_JITTER', '100'))
+timeout = int(os.getenv('TIMEOUT', '30'))
+keepalive = int(os.getenv('KEEPALIVE', '5'))
+
+# Restart workers after this many requests, with up to jitter added
+preload_app = True
+
+# Logging
+accesslog = '/app/logs/access.log'
+errorlog = '/app/logs/error.log'
+loglevel = os.getenv('LOG_LEVEL', 'info')
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
+
+# Process naming
+proc_name = 'codeguardian-api'
+
+# Server mechanics
+daemon = False
+pidfile = '/app/gunicorn.pid'
+user = 'codeguardian'
+group = 'codeguardian'
+tmp_upload_dir = '/app/cache'
+
+# SSL (if certificates are provided)
+keyfile = os.getenv('SSL_KEYFILE')
+certfile = os.getenv('SSL_CERTFILE')
+
+# Security
+limit_request_line = 4094
+limit_request_fields = 100
+limit_request_field_size = 8190
+
+def when_ready(server):
+    server.log.info("CodeGuardian AI v3.0.0 Enterprise API is ready")
+
+def worker_int(worker):
+    worker.log.info("Worker received INT or QUIT signal")
+
+def pre_fork(server, worker):
+    server.log.info("Worker spawned (pid: %s)", worker.pid)
+
+def post_fork(server, worker):
+    server.log.info("Worker spawned (pid: %s)", worker.pid)
+
+def post_worker_init(worker):
+    worker.log.info("Worker initialized (pid: %s)", worker.pid)
+
+def worker_abort(worker):
+    worker.log.info("Worker received SIGABRT signal")
+EOF
+
+# Switch to non-root user
+USER codeguardian
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# Set entrypoint
+ENTRYPOINT ["/app/start.sh"]
+
+# Default command (can be overridden)
+CMD []
+
